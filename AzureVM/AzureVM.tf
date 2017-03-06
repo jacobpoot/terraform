@@ -6,40 +6,40 @@ provider "azurerm" {
   tenant_id       = "d017007d-9b9c-44cc-84d8-95533b70f026"
 }
 
-resource "azurerm_resource_group" "TerraformVM" {
+resource "azurerm_resource_group" "test" {
     name = "TerraformVM"
     location = "West US"
 }
 
-resource "azurerm_virtual_network" "vNet1" {
-    name = "acctvn"
+resource "azurerm_virtual_network" "test" {
+    name = "vNet1"
     address_space = ["10.0.0.0/16"]
     location = "West US"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
 }
 
-resource "azurerm_subnet" "subnet" {
+resource "azurerm_subnet" "test" {
     name = "acctsub"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
-    virtual_network_name = "${azurerm_virtual_network.vNet1.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
     address_prefix = "10.0.2.0/24"
 }
 
-resource "azurerm_network_interface" "nic" {
+resource "azurerm_network_interface" "test" {
     name = "TerraformVM-NIC-01"
     location = "West Europe"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
 
     ip_configuration {
         name = "Standard"
-        subnet_id = "${azurerm_subnet.subnet.id}"
+        subnet_id = "${azurerm_subnet.test.id}"
         private_ip_address_allocation = "dynamic"
     }
 }
 
-resource "azurerm_storage_account" "stor01" {
+resource "azurerm_storage_account" "test" {
     name = "jacobterraformvmstor01"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
     location = "westeurope"
     account_type = "Standard_LRS"
 
@@ -48,18 +48,18 @@ resource "azurerm_storage_account" "stor01" {
     }
 }
 
-resource "azurerm_storage_container" "vhds" {
+resource "azurerm_storage_container" "test" {
     name = "vhds"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
-    storage_account_name = "${azurerm_storage_account.stor01.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    storage_account_name = "${azurerm_storage_account.test.name}"
     container_access_type = "private"
 }
 
-resource "azurerm_virtual_machine" "VM" {
+resource "azurerm_virtual_machine" "test" {
     name = "TerraformVM01"
     location = "West Europe"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
-    network_interface_ids = ["${azurerm_network_interface.nic.id}"]
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    network_interface_ids = ["${azurerm_network_interface.test.id}"]
     vm_size = "Standard_A0"
 
     storage_image_reference {
@@ -71,14 +71,14 @@ resource "azurerm_virtual_machine" "VM" {
 
     storage_os_disk {
         name = "TerraformOSdisk"
-        vhd_uri = "${azurerm_storage_account.stor01.primary_blob_endpoint}${azurerm_storage_container.stor01.name}/terraformOSdisk.vhd"
+        vhd_uri = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/terraformOSdisk.vhd"
         caching = "ReadWrite"
         create_option = "FromImage"
     }
 
  storage_data_disk {
     name          = "datadisk0"
-    vhd_uri       = "${azurerm_storage_account.stor01.primary_blob_endpoint}${azurerm_storage_container.stor01.name}/datadisk0.vhd"
+    vhd_uri       = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/datadisk0.vhd"
     disk_size_gb  = "1023"
     create_option = "empty"
     lun           = 0
@@ -86,7 +86,7 @@ resource "azurerm_virtual_machine" "VM" {
 
    storage_data_disk {
     name          = "datadisk1"
-    vhd_uri       = "${azurerm_storage_account.stor01.primary_blob_endpoint}${azurerm_storage_container.stor01.name}/datadisk1.vhd"
+    vhd_uri       = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/datadisk1.vhd"
     disk_size_gb  = "1023"
     create_option = "empty"
     lun           = 1
@@ -103,18 +103,21 @@ resource "azurerm_virtual_machine" "VM" {
     }
 }
 
-resource "azurerm_virtual_machine_extension" "extension1" {
+resource "azurerm_virtual_machine_extension" "test" {
     name = "hostname"
     location = "West Europe"
-    resource_group_name = "${azurerm_resource_group.TerraformVM.name}"
-    virtual_machine_name = "${azurerm_virtual_machine.VM.name}"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_machine_name = "${azurerm_virtual_machine.test.name}"
     publisher = "Microsoft.OSTCExtensions"
     type = "CustomScriptForWindows"
     type_handler_version = "1.2"
 
     settings = <<SETTINGS
     {
-        "commandToExecute": "powershell.exe -ExecutionPolicy Bypass -File .\\new-prtg-server\\scripts\\prepare-prtgserver.ps1"
+        "fileUris": [
+    "https://raw.githubusercontent.com/jacobpoot/terraform/master/Scripts/PrepareServer.ps1"
+  ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File PrepareServer.ps1"
     }
 SETTINGS
 
