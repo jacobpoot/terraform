@@ -21,3 +21,30 @@ $roleassignment = New-AzureRmRoleAssignment -ServicePrincipalName http://azurege
 
 $result = @{SubscriptionID="$($azuresub.SubscriptionId)"; TenantID = "$($azuresub.TenantId)"; ClientID = "$($app.ApplicationId)"; client_secret = $app_password; object_id = "$($roleassignment.ObjectId)"}
 $result
+
+
+
+
+
+resource "azurerm_virtual_machine_extension" "test" {
+    name = "hostname"
+    location = "West Europe"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_machine_name = "${azurerm_virtual_machine.test.name}"
+    publisher = "Microsoft.OSTCExtensions"
+    type = "CustomScriptForWindows"
+    type_handler_version = "1.2"
+
+    settings = <<SETTINGS
+    {
+        "fileUris": [
+    "https://raw.githubusercontent.com/jacobpoot/terraform/master/Scripts/PrepareServer.ps1"
+  ],
+        "commandToExecute": "powershell.exe -ExecutionPolicy Unrestricted -File PrepareServer.ps1"
+    }
+SETTINGS
+
+    tags {
+        environment = "Production"
+    }
+}
