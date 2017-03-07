@@ -39,6 +39,20 @@ resource "azurerm_subnet" "test3" {
     address_prefix = "10.0.4.0/24"
 }
 
+resource "azurerm_subnet" "test8" {
+    name = "Subnet8"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.8.0/24"
+}
+
+resource "azurerm_subnet" "test4" {
+    name = "Subnet3"
+    resource_group_name = "${azurerm_resource_group.test.name}"
+    virtual_network_name = "${azurerm_virtual_network.test.name}"
+    address_prefix = "10.0.5.0/24"
+}
+
 resource "azurerm_network_interface" "test" {
     name = "TerraformVM-NIC-02"
     location = "West Europe"
@@ -90,21 +104,7 @@ resource "azurerm_virtual_machine" "test" {
         create_option = "FromImage"
     }
 
- storage_data_disk {
-    name          = "datadisk0"
-    vhd_uri       = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/datadisk0.vhd"
-    disk_size_gb  = "1023"
-    create_option = "empty"
-    lun           = 0
-  }
-
-   storage_data_disk {
-    name          = "datadisk1"
-    vhd_uri       = "${azurerm_storage_account.test.primary_blob_endpoint}${azurerm_storage_container.test.name}/datadisk1.vhd"
-    disk_size_gb  = "1023"
-    create_option = "empty"
-    lun           = 1
-  }
+ 
 
     os_profile {
         computer_name = "TerraformVM01"

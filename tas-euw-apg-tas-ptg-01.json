@@ -1,0 +1,265 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.1.0.0",
+    "parameters": {
+        "pfx-top07-tas-nl": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                },
+                "secretName": "pfx-top07-tas-nl"
+            }
+        },
+        "pfx-top07-tas-nl-passphrase": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                },
+                "secretName": "pfx-top07-tas-nl-passphrase"
+            }
+        },
+        "crt-top07-tas-nl": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                },
+                "secretName": "crt-top07-tas-nl"
+            }
+        },
+        "existingVirtualNetworkResourceGroupName": {
+            "type" : "string",
+            "value": "TerraformVM"
+        },
+        "existingVirtualNetworkName": {
+            "type" : "string",
+            "value": "vNet1"
+        },
+        "existingSubnetName": {
+            "type" : "string",
+            "value": "Subnet1"
+        },
+        "existingdiagnosticsStorageAccountId": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                },
+                "secretName": "id-DiagnosticsStorageAccount"
+            }
+        },
+        "existingWorkspaceId": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                },
+                "secretName": "id-Workspace"
+            }
+        },
+        "sasToken": {
+            "type" : "securestring",
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                },
+                "secretName": "sas-Templates"
+            }
+        }
+    },
+    "variables": {
+        "applicationGatewayName": "TAS-EUW-APG-TAS-PTG-01",
+        "applicationGatewayInstanceCount": 2,
+        "applicationGatewaySize": "WAF_Medium",
+        "applicationGatewayTier": "WAF",
+        "webapplicationFirewallEnabled": true,
+        "webapplicationFirewallMode": "Detection",
+        "applicationGatewayId": "[resourceId('Microsoft.Network/applicationGateways', variables('applicationGatewayName'))]",
+        "publicIPAddressName": "[concat(variables('applicationGatewayName'), '-PIP-01')]",
+        "publicIPId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "vnetId": "[resourceId(parameters('existingVirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
+        "subnetId": "[concat(variables('vnetId'),'/subnets/', parameters('existingSubnetName'))]",
+        "templateLinkUri": "[deployment().properties.templateLink.uri]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-10-01",
+            "name": "[variables('publicIPAddressName')]",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "idleTimeoutInMinutes": 4
+            }
+        },
+        {
+            "apiVersion": "2016-10-01",
+            "name": "[variables('applicationGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "baselineApplicationGateway": "1.1.0.0"
+            },
+            "dependsOn": [
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
+            ],
+            "properties": {
+                "sku": {
+                    "name": "[variables('applicationGatewaySize')]",
+                    "tier": "[variables('applicationGatewayTier')]",
+                    "capacity": "[variables('applicationGatewayInstanceCount')]"
+                },
+                "sslCertificates": [
+                    {
+                        "name": "top01.ogd.nl-SslCertificate",
+                        "properties": {
+                            "data": "[parameters('pfx-top07-tas-nl')]",
+                            "password": "[parameters('pfx-top07-tas-nl-passphrase')]"
+                        }
+                    }
+                ],
+                "authenticationCertificates": [
+                    {
+                        "name": "top01.ogd.nl-authenticationCertificate",
+                        "properties": {
+                            "data": "[parameters('crt-top07-tas-nl')]"
+                        }
+                    }
+                ],
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "internal-gatewayIPConfigurations",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetId')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "external-FrontendIPConfiguration",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('publicIpId')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "https-FrontendPort",
+                        "properties": {
+                            "Port": 443
+                        }
+                    },
+                    {
+                        "name": "http-FrontendPort",
+                        "properties": {
+                            "Port": 80
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "top01.ogd.nl-BackendAddressPool",
+                        "properties": {
+                            "backendAddresses": [
+                                {
+                                    "ipAddress": "10.151.4.11"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "top01.ogd.nl-BackendHttpSettings",
+                        "properties": {
+                            "port": 443,
+                            "protocol": "Https",
+                            "cookieBasedAffinity": "Enabled",
+                            "requestTimeout": 30,
+                            "authenticationCertificates": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/authenticationCertificates/top01.ogd.nl-authenticationCertificate')]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "top01.ogd.nl-HttpsListener",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendIPConfigurations/external-FrontendIPConfiguration')]"
+                            },
+                            "frontendPort": {
+                                "id": "[concat(variables('applicationGatewayId'), '/frontendPorts/https-FrontendPort')]"
+                            },
+                            "protocol": "Https",
+                            "sslCertificate": {
+                                "id": "[concat(variables('applicationGatewayId'), '/sslCertificates/top01.ogd.nl-SslCertificate')]"
+                            },
+                            "hostName": "top01.ogd.nl",
+                            "requireServerNameIndication": true
+                        }
+                    }
+                ],
+                "urlPathMaps": [],
+                "requestRoutingRules": [
+                    {
+                        "name": "top01.ogd.nl-RequestRoutingRule",
+                        "properties": {
+                            "ruleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('applicationGatewayId'), '/httpListeners/top01.ogd.nl-HttpsListener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendAddressPools/top01.ogd.nl-BackendAddressPool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/top01.ogd.nl-BackendHttpSettings')]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [],
+                "webApplicationFirewallConfiguration": {
+                    "enabled": "[variables('webapplicationFirewallEnabled')]",
+                    "firewallMode": "[variables('webapplicationFirewallMode')]"
+                }
+            }
+        },
+        {
+            "name": "apgBaseLine",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2016-09-01",
+            "dependsOn": [
+                "[concat('Microsoft.Network/applicationGateways/', variables('applicationGatewayName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[uri(variables('templateLinkUri'), concat('nested/apgbaseline.json', parameters('sasToken')))]",
+                    "contentVersion": "1.1.0.0"
+                },
+                "parameters": {
+                    "existingDiagnosticsStorageAccountId": {
+                        "value": "[parameters('existingDiagnosticsStorageAccountId')]"
+                    },
+                    "existingWorkspaceId": {
+                        "value": "[parameters('existingWorkspaceId')]"
+                    },
+                    "applicationGatewayName": {
+                        "value": "[variables('applicationGatewayName')]"
+                    }
+                }
+            }
+        }
+    ]
+}
