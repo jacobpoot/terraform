@@ -8,18 +8,18 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "test" {
     name = "TerraformVM"
-    location = "West US"
+    location = "West Europe"
 }
 
 resource "azurerm_virtual_network" "test" {
     name = "vNet1"
     address_space = ["10.0.0.0/16"]
-    location = "West US"
+    location = "West Europe"
     resource_group_name = "${azurerm_resource_group.test.name}"
 }
 
 resource "azurerm_subnet" "test" {
-    name = "acctsub"
+    name = "Subnet1"
     resource_group_name = "${azurerm_resource_group.test.name}"
     virtual_network_name = "${azurerm_virtual_network.test.name}"
     address_prefix = "10.0.2.0/24"
@@ -60,7 +60,7 @@ resource "azurerm_virtual_machine" "test" {
     location = "West Europe"
     resource_group_name = "${azurerm_resource_group.test.name}"
     network_interface_ids = ["${azurerm_network_interface.test.id}"]
-    vm_size = "Standard_A0"
+    vm_size = "Standard_A1"
 
     storage_image_reference {
         publisher = "MicrosoftWindowsServer"

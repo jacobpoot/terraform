@@ -1,8 +1,8 @@
 # Configure the Microsoft Azure Provider
 provider "azurerm" {
-  subscription_id = "8c6f9e0e-915e-4898-b190-8494072467b2"
+  subscription_id = ""
   client_id       = "7cb89389-135d-463e-8b69-e8c97c297026"
-  client_secret   = "UYASDGas5dfaghuy&*YGusysd"
+  client_secret   = ""
   tenant_id       = "d017007d-9b9c-44cc-84d8-95533b70f026"
 }
 
