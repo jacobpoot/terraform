@@ -6,7 +6,7 @@
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "pfx-top07-tas-nl"
             }
@@ -15,7 +15,7 @@
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "pfx-top07-tas-nl-passphrase"
             }
@@ -24,28 +24,28 @@
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-certs"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "crt-top07-tas-nl"
             }
         },
         "existingVirtualNetworkResourceGroupName": {
             "type" : "string",
-            "value": "TerraformVM"
+            "value": "main-network"
         },
         "existingVirtualNetworkName": {
             "type" : "string",
-            "value": "vNet1"
+            "value": "terraform-vnet"
         },
         "existingSubnetName": {
             "type" : "string",
-            "value": "Subnet1"
+            "value": "terraform-subnet1"
         },
         "existingdiagnosticsStorageAccountId": {
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "id-DiagnosticsStorageAccount"
             }
@@ -54,7 +54,7 @@
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "id-Workspace"
             }
@@ -63,14 +63,14 @@
             "type" : "securestring",
             "reference": {
                 "keyVault": {
-                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/OGD-EUW-KEY-IA-SECRET-01"
+                    "id": "/subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2/resourceGroups/terraform-keyvault/providers/Microsoft.KeyVault/vaults/terraform-secrets"
                 },
                 "secretName": "sas-Templates"
             }
         }
     },
     "variables": {
-        "applicationGatewayName": "TAS-EUW-APG-TAS-PTG-01",
+        "applicationGatewayName": "terraform-applicationGateway",
         "applicationGatewayInstanceCount": 2,
         "applicationGatewaySize": "WAF_Medium",
         "applicationGatewayTier": "WAF",
@@ -81,7 +81,7 @@
         "publicIPId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
         "vnetId": "[resourceId(parameters('existingVirtualNetworkResourceGroupName'), 'Microsoft.Network/virtualNetworks', parameters('existingVirtualNetworkName'))]",
         "subnetId": "[concat(variables('vnetId'),'/subnets/', parameters('existingSubnetName'))]",
-        "templateLinkUri": "[deployment().properties.templateLink.uri]"
+        "templateLinkUri": "https://terraformtemplates01.blob.core.windows.net/"
     },
     "resources": [
         {
@@ -177,7 +177,7 @@
                 ],
                 "backendHttpSettingsCollection": [
                     {
-                        "name": "top01.ogd.nl-BackendHttpSettings",
+                        "name": "top07.ogd.nl-BackendHttpSettings",
                         "properties": {
                             "port": 443,
                             "protocol": "Https",
@@ -193,7 +193,7 @@
                 ],
                 "httpListeners": [
                     {
-                        "name": "top01.ogd.nl-HttpsListener",
+                        "name": "top07.ogd.nl-HttpsListener",
                         "properties": {
                             "frontendIPConfiguration": {
                                 "id": "[concat(variables('applicationGatewayId'), '/frontendIPConfigurations/external-FrontendIPConfiguration')]"
@@ -205,7 +205,7 @@
                             "sslCertificate": {
                                 "id": "[concat(variables('applicationGatewayId'), '/sslCertificates/top01.ogd.nl-SslCertificate')]"
                             },
-                            "hostName": "top01.ogd.nl",
+                            "hostName": "top07.ogd.nl",
                             "requireServerNameIndication": true
                         }
                     }
@@ -213,17 +213,17 @@
                 "urlPathMaps": [],
                 "requestRoutingRules": [
                     {
-                        "name": "top01.ogd.nl-RequestRoutingRule",
+                        "name": "top07.ogd.nl-RequestRoutingRule",
                         "properties": {
                             "ruleType": "Basic",
                             "httpListener": {
-                                "id": "[concat(variables('applicationGatewayId'), '/httpListeners/top01.ogd.nl-HttpsListener')]"
+                                "id": "[concat(variables('applicationGatewayId'), '/httpListeners/top07.ogd.nl-HttpsListener')]"
                             },
                             "backendAddressPool": {
-                                "id": "[concat(variables('applicationGatewayId'), '/backendAddressPools/top01.ogd.nl-BackendAddressPool')]"
+                                "id": "[concat(variables('applicationGatewayId'), '/backendAddressPools/top07.ogd.nl-BackendAddressPool')]"
                             },
                             "backendHttpSettings": {
-                                "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/top01.ogd.nl-BackendHttpSettings')]"
+                                "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/top07.ogd.nl-BackendHttpSettings')]"
                             }
                         }
                     }
@@ -245,7 +245,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "uri": "[uri(variables('templateLinkUri'), concat('nested/apgbaseline.json', parameters('sasToken')))]",
+                    "uri": "[uri(variables('templateLinkUri'), concat('conf/apgbaseline.json', parameters('sasToken')))]",
                     "contentVersion": "1.1.0.0"
                 },
                 "parameters": {
