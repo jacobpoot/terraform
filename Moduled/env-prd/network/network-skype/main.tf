@@ -58,7 +58,7 @@ resource "azurerm_public_ip" "virtual-network-gateway" {
   resource_group_name          = "${azurerm_resource_group.network.name}"
   public_ip_address_allocation = "Dynamic"
 
-  domain_name_label = "${lower(${var.vng_name})}"
+  #domain_name_label = "${lower(${var.vng_name})}"
 
   tags {
     terraformManaged = "true"
