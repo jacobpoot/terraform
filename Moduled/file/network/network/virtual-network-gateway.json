@@ -1,0 +1,51 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {
+        "vngName": "${name}",
+        "vngGatewayType": "${gateway_type}",
+        "vngSku": "${sku}",
+        "vngVpnType": "${vpn_type}",
+        "vngPublicIpAddressName": "${public_ip_name}",
+        "vnetName": "${vnet_name}"
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "name": "[variables('vngName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "baselineVirtualNetworkGateway": "1.0.0.0",
+                "terraformManaged": "true",
+                "environment": "${tag_environment}"
+            },
+            "dependsOn": [
+            ],
+            "properties": {
+                "gatewayType": "[variables('vngGatewayType')]",
+                "ipConfigurations": [
+                    {
+                        "name": "default",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[concat(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')), '/subnets/GatewaySubnet')]"
+                            },
+                            "publicIpAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('vngPublicIpAddressName'))]"
+                            }
+                        }
+                    }
+                ],
+                "enableBgp": false,
+                "vpnType": "[variables('vngVpnType')]",
+                "sku": {
+                    "name": "[variables('vngSku')]",
+                    "tier": "[variables('vngSku')]"
+                }
+            }
+        }
+    ]
+}

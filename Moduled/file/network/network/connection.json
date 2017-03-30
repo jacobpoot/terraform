@@ -1,0 +1,38 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {
+        "conName": "${name}",
+        "conSharedKey": "${psk}",
+        "lngName": "${lng_name}",
+        "vngName": "${vng_name}"
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-06-15",
+            "type": "Microsoft.Network/connections",
+            "name": "[variables('conName')]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "baselineConnection": "1.0.0.0",
+                "terraformManaged": "true",
+                "environment": "${tag_environment}"
+            },
+            "dependsOn": [
+            ],
+            "properties": {
+                "virtualNetworkGateway1": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworkGateways', variables('vngName'))]"
+                },
+                "localNetworkGateway2": {
+                    "id": "[resourceId('Microsoft.Network/localNetworkGateways', variables('lngName'))]"
+                },
+                "connectionType": "IPsec",
+                "routingWeight": 0,
+                "sharedKey": "[variables('conSharedKey')]",
+                "enableBgp": false
+            }
+        }
+    ]
+}
