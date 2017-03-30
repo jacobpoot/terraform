@@ -5,7 +5,7 @@ variable "location" {
 
 variable "vng_name" {
   description = "Name of the Virtual Network Gateway"
-  default     = "TAS-EUW-VNB-TAS-NETWORK-01"
+  default     = "VNET-01"
 }
 
 variable "vng_gateway_type" {
@@ -25,15 +25,15 @@ variable "vng_vpn_type" {
 
 variable "con_name" {
   description = "Name of the Connection."
-  default     = "TAS-EUW-CON-TAS-NETWORK-01-TO-KLANTENPLEIN-01"
+  default     = "VPN-CONNECTION-01"
 }
 
 variable "con_psk" {
   description = "Pre-Shared Key used by the Connection."
-  default     = "Welkom123456"
+  default     = "justatestpassw0RD!"
 }
 
 variable "tag_environment" {
   description = "Tag describing the environment. e.g. production, staging etc."
-  default     = "test"
+  default     = "production"
 }
