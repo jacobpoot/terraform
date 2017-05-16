@@ -3,23 +3,30 @@
 param (
 
 [string]$azurelocation = 'West Europe',
-[string]$app_password = 'IYHsyudba87tdefTfgds',
-[string]$subscription_ID = '8c6f9e0e-915e-4898-b190-8494072467b2'
+[string]$app_password = 'AutomationPa$$w0rd!',
+[string]$subscription_ID = '733a1ea1-2d00-45b8-a6f3-c05a5ef2d5c3', 
+[string]$PageName = 'http://ogdhenken.nl/Terraform2',
+[string]$ResourceGroup = 'terraform-automation'
 
 )
 
 Add-AzureRmAccount
 $azuresub = Get-AzureRmSubscription -SubscriptionId $subscription_ID
 
-New-AzureRmADApplication -DisplayName TerraformAuth -HomePage http://azuregek.nl/TerraformAuth -IdentifierUris http://azuregek.nl/TerraformAuth -Password $app_password -Verbose
+New-AzureRmADApplication -DisplayName BIERAuth-RAP -HomePage $PageName -IdentifierUris $PageName -Password $app_password -Verbose
 
-$app = Get-AzureRmADApplication -IdentifierUri http://azuregek.nl/TerraformAuth -Verbose
+$app = Get-AzureRmADApplication -IdentifierUri $PageName -Verbose
 
 New-AzureRmADServicePrincipal -ApplicationId $app.ApplicationId -Verbose
 Start-Sleep -Seconds 20
-#$roleassignment = New-AzureRmRoleAssignment -ServicePrincipalName http://azuregek.nl/TerraformAut -RoleDefinitionName Owner -ResourceGroupName OGD-EUW-RGR-PRD-BIR-RAP-02  -Verbose
-$roleassignment = New-AzureRmRoleAssignment -ServicePrincipalName http://azuregek.nl/TerraformAuth -RoleDefinitionName Owner -Scope /subscriptions/8c6f9e0e-915e-4898-b190-8494072467b2 -Verbose
 
+#Uncheck voor rechten op resourcegroup
+#$roleassignment = New-AzureRmRoleAssignment -ServicePrincipalName http://ogd.nl/BIERauth-RAP -RoleDefinitionName Contributor -ResourceGroupName $ResourceGroup  -Verbose
+
+#Uncheck voor rechten op subscription
+$roleassignment = New-AzureRmRoleAssignment -ServicePrincipalName $pagename -RoleDefinitionName Owner -Scope "/subscriptions/$subscription_ID" -Verbose
+
+#geeft alle benodigde gegevens voor environment variables die Terraform nodig heeft
 $result = @{SubscriptionID="$($azuresub.SubscriptionId)"; TenantID = "$($azuresub.TenantId)"; ClientID = "$($app.ApplicationId)"; client_secret = $app_password; object_id = "$($roleassignment.ObjectId)"}
 $result
 
